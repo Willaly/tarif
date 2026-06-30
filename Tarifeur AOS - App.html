@@ -1,0 +1,380 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tarifeur AOS — Outil de chiffrage</title>
+<style>
+  :root{
+    --blue:#1f4e78; --blue2:#2e6caa; --bg:#f4f6f9; --card:#ffffff; --line:#e3e8ef;
+    --ink:#1b2430; --muted:#6b7686; --green:#2e7d32; --greenbg:#e7f3e8;
+    --amber:#fff4d6; --amberline:#e6c870; --accent:#1f4e78;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:14px}
+  header{background:var(--blue);color:#fff;padding:16px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+  header h1{font-size:18px;margin:0;font-weight:700;letter-spacing:.2px}
+  header .sub{color:#cfe0f0;font-size:12px}
+  .btn{background:#ffffff22;color:#fff;border:1px solid #ffffff55;border-radius:8px;padding:7px 12px;cursor:pointer;font-size:13px}
+  .btn:hover{background:#ffffff33}
+  .wrap{max-width:1180px;margin:18px auto;padding:0 18px;display:grid;grid-template-columns:1fr 360px;gap:18px;align-items:start}
+  @media(max-width:900px){.wrap{grid-template-columns:1fr}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:16px;box-shadow:0 1px 2px #0000000a}
+  .card h2{font-size:13px;text-transform:uppercase;letter-spacing:.6px;color:var(--blue);margin:0 0 12px;font-weight:700}
+  label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
+  input,select{font:inherit;padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:#fff;width:100%}
+  input:focus,select:focus{outline:2px solid #1f4e7833;border-color:var(--blue)}
+  input[type=number]{text-align:right}
+  .row{display:flex;gap:12px;flex-wrap:wrap}
+  .row>div{flex:1;min-width:120px}
+  table{width:100%;border-collapse:collapse}
+  th,td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:right;font-size:13px}
+  th{font-size:11px;text-transform:uppercase;letter-spacing:.4px;color:var(--muted);font-weight:600}
+  td.l,th.l{text-align:left}
+  .qty{width:70px;text-align:right;padding:5px 7px}
+  .price{color:var(--muted);font-variant-numeric:tabular-nums}
+  .xxx{display:inline-block;background:var(--amber);border:1px solid var(--amberline);color:#8a6d1a;border-radius:5px;padding:1px 7px;font-size:11px;font-weight:700}
+  .sub td{border:none;color:var(--ink);font-weight:600}
+  /* results */
+  .results{position:sticky;top:16px}
+  .res-line{display:flex;justify-content:space-between;align-items:baseline;padding:7px 0;border-bottom:1px dashed var(--line)}
+  .res-line .k{color:var(--muted);font-size:13px}
+  .res-line .v{font-variant-numeric:tabular-nums;font-weight:600}
+  .total{background:var(--greenbg);border:1px solid #b7d8b9;border-radius:10px;padding:12px 14px;margin-top:10px}
+  .total .k{font-size:12px;color:#2e7d32;text-transform:uppercase;letter-spacing:.5px;font-weight:700}
+  .total .v{font-size:26px;font-weight:800;color:#1f5d22}
+  .pill{display:inline-block;background:#fdece1;border:1px solid #e9b894;color:#9a4b16;border-radius:6px;padding:2px 8px;font-weight:700;font-size:12px}
+  .break{font-size:12px;color:var(--muted);margin-top:8px;line-height:1.6}
+  .break b{color:var(--ink)}
+  details.settings{margin:0 18px 26px;max-width:1180px;margin-left:auto;margin-right:auto}
+  details.settings>summary{cursor:pointer;color:var(--blue);font-weight:700;padding:10px 0;font-size:13px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  @media(max-width:760px){.grid2{grid-template-columns:1fr}}
+  .mini{font-size:12px;color:var(--muted)}
+  .seteur input{width:110px}
+  .note{font-size:11px;color:var(--muted);margin-top:4px}
+  .foot{max-width:1180px;margin:0 auto 30px;padding:0 18px;color:var(--muted);font-size:11px}
+  .manual-on{background:#fff4d6}
+</style>
+</head>
+<body>
+<header>
+  <div><h1>Tarifeur AOS</h1><div class="sub">Outil de chiffrage — calcul automatique des remises</div></div>
+  <div style="display:flex;gap:8px">
+    <button class="btn" id="resetInputs">Nouveau devis</button>
+    <button class="btn" id="resetAll">Réinitialiser les paramètres</button>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="left">
+    <div class="card">
+      <h2>Paramètres du deal</h2>
+      <div class="row">
+        <div>
+          <label>Abonnement ?</label>
+          <select id="abonnement"><option>Non</option><option>Oui</option></select>
+        </div>
+        <div>
+          <label>Durée si abonnement (ans)</label>
+          <select id="duree"><option>1</option><option>2</option><option>3</option></select>
+        </div>
+        <div>
+          <label>Engagement retenu</label>
+          <input id="engRetenu" readonly value="0 an">
+        </div>
+        <div>
+          <label>Client / Deal</label>
+          <input id="client" placeholder="Nom du client">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>1 — AOS · nombre de projets par tranche de montant (M€)</h2>
+      <table id="aosTable">
+        <thead><tr><th class="l">Tranche</th><th>Prix unitaire HT</th><th>Nb projets</th><th>Sous-total HT</th></tr></thead>
+        <tbody></tbody>
+        <tfoot><tr class="sub"><td class="l">Total AOS HT</td><td></td><td id="aosNb">0</td><td id="aosTot">—</td></tr></tfoot>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2>2 — Modules &amp; options</h2>
+      <table id="modTable">
+        <thead><tr><th class="l">Élément</th><th class="l">Détail / variante</th><th>Qté</th><th>P.U. HT</th><th>Total HT</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="l">Signature électronique</td>
+            <td class="l"><select id="signVar" style="width:auto"></select></td>
+            <td><input class="qty" type="number" min="0" id="signQty" placeholder="0"></td>
+            <td class="price" id="signPU">—</td>
+            <td id="signTot">—</td>
+          </tr>
+          <tr>
+            <td class="l">Analytics</td>
+            <td class="l mini">accès</td>
+            <td><input class="qty" type="number" min="0" id="anaQty" placeholder="0"></td>
+            <td class="price" id="anaPU">—</td>
+            <td id="anaTot">—</td>
+          </tr>
+          <tr>
+            <td class="l">Consultation ouverte</td>
+            <td class="l mini">option</td>
+            <td><input class="qty" type="number" min="0" id="consQty" placeholder="0"></td>
+            <td class="price" id="consPU">—</td>
+            <td id="consTot">—</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="right">
+    <div class="card results">
+      <h2>Récapitulatif &amp; remise</h2>
+      <div class="res-line"><span class="k">Total brut HT</span><span class="v" id="rBrut">—</span></div>
+      <div class="res-line"><span class="k">Remise auto</span><span class="v"><span class="pill" id="rAuto">0 %</span></span></div>
+      <div class="res-line"><span class="k">Remise manuelle (option)</span><span class="v"><input id="manuel" class="qty" style="width:80px" type="number" min="0" max="100" placeholder="—"> %</span></div>
+      <div class="res-line"><span class="k">Remise appliquée</span><span class="v"><span class="pill" id="rApp">0 %</span></span></div>
+      <div class="res-line"><span class="k">Total annuel remisé HT</span><span class="v" id="rAnnuel">—</span></div>
+      <div class="total"><div class="k">Total contrat HT (× engagement)</div><div class="v" id="rContrat">—</div></div>
+      <div class="break" id="breakdown"></div>
+    </div>
+  </div>
+</div>
+
+<details class="settings">
+  <summary>⚙ Paramètres (prix &amp; grille de remise) — modifiable</summary>
+  <div class="card">
+    <div class="grid2">
+      <div>
+        <h2>Prix AOS par tranche (HT)</h2>
+        <table id="setAos"></table>
+        <p class="note">Laisse vide pour « XXX » (prix non connu, compté 0).</p>
+      </div>
+      <div>
+        <h2>Signature / Analytics / Options (HT)</h2>
+        <table id="setMod"></table>
+        <p class="note">Cellule vide = « XXX ».</p>
+      </div>
+    </div>
+    <div class="grid2" style="margin-top:18px">
+      <div>
+        <h2>Bonus volume (à partir de N projets)</h2>
+        <table id="setVol"></table>
+        <p class="note">En dessous du 1er palier : 0 %.</p>
+      </div>
+      <div>
+        <h2>Autres paramètres de remise</h2>
+        <table id="setMisc"></table>
+      </div>
+    </div>
+  </div>
+</details>
+
+<div class="foot">Tous les montants sont HT. Les remises se cumulent (abonnement + volume + engagement + bonus Sign) et sont plafonnées. Le bonus Sign vaut 5 % (8 % si AOS + Sign et total ≥ seuil) ; en Sign seul, 5 % seulement au-dessus du seuil.</div>
+
+<script>
+/* ============ CONFIG PAR DÉFAUT (= v2) ============ */
+const DEFAULT = {
+  aos:[
+    {label:"< 150K", price:300},{label:"< 500K", price:680},{label:"< 2M", price:1100},
+    {label:"< 6M", price:1620},{label:"< 10M", price:2150},{label:"< 25M", price:3200},
+    {label:"< 50M", price:4250},{label:"< 100M", price:5300},{label:"> 100M", price:6350},
+    {label:"Forfait 1 projet (montant inconnu)", price:1850}
+  ],
+  sign:[{label:"Simple", price:840},{label:"Avec accompagnement", price:null},{label:"Avec paramétrage", price:null}],
+  analytics:null,   // XXX (prix à venir)
+  consultation:null, // XXX (prix à venir)
+  base:0.10, cap:0.38, seuil:5000,
+  volume:[{min:10,bonus:0.05},{min:20,bonus:0.08},{min:30,bonus:0.10},{min:40,bonus:0.12},{min:50,bonus:0.15}],
+  eng:{1:0.0,2:0.05,3:0.10},
+  signBase:0.05, signCombo:0.08
+};
+const consultDefault=null; // XXX
+
+/* ============ MOTEUR DE CALCUL (testable) ============ */
+/*__CALC_START__*/
+function computeQuote(state, cfg){
+  const num = v => { v = parseFloat(v); return isFinite(v) ? v : 0; };
+  let aosTotal=0, nbTotal=0;
+  cfg.aos.forEach((t,i)=>{ const q=num(state.aosQty[i]); aosTotal += num(t.price)*q; nbTotal += q; });
+  // signature
+  const sv = cfg.sign[state.signIndex] || {price:null};
+  const signPrice = (state.signIndex>=0 && typeof sv.price==='number') ? sv.price : 0;
+  const signTotal = signPrice * num(state.signQty);
+  const anaPrice = (typeof cfg.analytics==='number') ? cfg.analytics : 0;
+  const anaTotal = anaPrice * num(state.anaQty);
+  const consPrice = (typeof cfg.consultation==='number') ? cfg.consultation : 0;
+  const consTotal = consPrice * num(state.consQty);
+  const brut = aosTotal + signTotal + anaTotal + consTotal;
+
+  const engRetenu = (state.abonnement==='Non') ? 0 : num(parseInt(state.duree)||1);
+
+  const base = (state.abonnement==='Oui') ? cfg.base : 0;
+  // volume : plus haut palier dont min <= nbTotal
+  let volume=0;
+  cfg.volume.forEach(p=>{ if(nbTotal>=p.min) volume=p.bonus; });
+  const engagement = engRetenu>=3 ? cfg.eng[3] : engRetenu===2 ? cfg.eng[2] : engRetenu===1 ? cfg.eng[1] : 0;
+  // bonus Sign
+  let signBonus=0;
+  if(signTotal>0){
+    if(aosTotal>0){ signBonus = (brut>=cfg.seuil) ? cfg.signCombo : cfg.signBase; }
+    else { signBonus = (brut>=cfg.seuil) ? cfg.signBase : 0; }
+  }
+  const autoRaw = base+volume+engagement+signBonus;
+  const auto = Math.min(cfg.cap, autoRaw);
+  const manual = (state.manuel===''||state.manuel==null||isNaN(state.manuel)) ? null : state.manuel/100;
+  const applied = (manual!=null) ? manual : auto;
+  const annuel = brut*(1-applied);
+  const contrat = annuel * (engRetenu===0?1:engRetenu);
+
+  return {aosTotal,nbTotal,signTotal,signPrice,anaTotal,anaPrice,consTotal,consPrice,brut,
+    engRetenu,base,volume,engagement,signBonus,autoRaw,auto,applied,manual,annuel,contrat};
+}
+/*__CALC_END__*/
+
+/* ============ ÉTAT & PERSISTANCE ============ */
+let CFG = load('aos_cfg', DEFAULT);
+let STATE = load('aos_state', {
+  abonnement:'Non', duree:'1', client:'',
+  aosQty:Array(DEFAULT.aos.length).fill(''),
+  signIndex:0, signQty:'', anaQty:'', consQty:'', manuel:''
+});
+function load(k,d){ try{const v=localStorage.getItem(k); return v?Object.assign(JSON.parse(JSON.stringify(d)),JSON.parse(v)):JSON.parse(JSON.stringify(d));}catch(e){return JSON.parse(JSON.stringify(d));} }
+function save(){ try{localStorage.setItem('aos_cfg',JSON.stringify(CFG));localStorage.setItem('aos_state',JSON.stringify(STATE));}catch(e){} }
+
+/* ============ FORMAT ============ */
+const eur = new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR',maximumFractionDigits:0});
+const eur2 = new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR',maximumFractionDigits:2});
+const pct = x => (x*100).toLocaleString('fr-FR',{maximumFractionDigits:1})+' %';
+const money = (price)=> (typeof price==='number') ? eur.format(price) : '<span class="xxx">XXX</span>';
+
+/* ============ RENDU INPUTS ============ */
+function renderInputs(){
+  // AOS rows
+  const tb = document.querySelector('#aosTable tbody'); tb.innerHTML='';
+  CFG.aos.forEach((t,i)=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td class="l">${t.label}</td><td class="price">${money(t.price)}</td>
+      <td><input class="qty" type="number" min="0" data-aos="${i}" value="${STATE.aosQty[i]??''}" placeholder="0"></td>
+      <td data-aossub="${i}">—</td>`;
+    tb.appendChild(tr);
+  });
+  // sign variants
+  const sv=document.getElementById('signVar'); sv.innerHTML='';
+  CFG.sign.forEach((s,i)=>{ const o=document.createElement('option'); o.value=i; o.textContent=s.label+(typeof s.price!=='number'?' (XXX)':''); sv.appendChild(o); });
+  const opt=document.createElement('option'); opt.value=-1; opt.textContent='Aucune'; sv.appendChild(opt);
+  sv.value=STATE.signIndex;
+  document.getElementById('abonnement').value=STATE.abonnement;
+  document.getElementById('duree').value=STATE.duree;
+  document.getElementById('client').value=STATE.client||'';
+  document.getElementById('signQty').value=STATE.signQty??'';
+  document.getElementById('anaQty').value=STATE.anaQty??'';
+  document.getElementById('consQty').value=STATE.consQty??'';
+  document.getElementById('manuel').value=STATE.manuel??'';
+}
+
+/* ============ RENDU RÉGLAGES ============ */
+function renderSettings(){
+  let h='<thead><tr><th class="l">Tranche</th><th>Prix HT</th></tr></thead><tbody>';
+  CFG.aos.forEach((t,i)=> h+=`<tr><td class="l">${t.label}</td><td class="seteur"><input type="number" data-setaos="${i}" value="${t.price??''}" placeholder="XXX"></td></tr>`);
+  h+='</tbody>'; document.getElementById('setAos').innerHTML=h;
+
+  let m='<tbody>';
+  CFG.sign.forEach((s,i)=> m+=`<tr><td class="l">Signature — ${s.label}</td><td class="seteur"><input type="number" data-setsign="${i}" value="${s.price??''}" placeholder="XXX"></td></tr>`);
+  m+=`<tr><td class="l">Analytics (/ accès)</td><td class="seteur"><input type="number" data-setana value="${CFG.analytics??''}" placeholder="XXX"></td></tr>`;
+  m+=`<tr><td class="l">Consultation ouverte</td><td class="seteur"><input type="number" data-setcons value="${CFG.consultation??''}" placeholder="XXX"></td></tr></tbody>`;
+  document.getElementById('setMod').innerHTML=m;
+
+  let v='<thead><tr><th class="l">À partir de (projets)</th><th>Bonus %</th></tr></thead><tbody>';
+  CFG.volume.forEach((p,i)=> v+=`<tr><td class="seteur l"><input type="number" data-setvolmin="${i}" value="${p.min}"></td><td class="seteur"><input type="number" step="0.1" data-setvolb="${i}" value="${(p.bonus*100)}"></td></tr>`);
+  v+='</tbody>'; document.getElementById('setVol').innerHTML=v;
+
+  let s='<tbody>';
+  s+=`<tr><td class="l">Remise abonnement de base</td><td class="seteur"><input type="number" step="0.1" data-setmisc="base" value="${CFG.base*100}"> %</td></tr>`;
+  s+=`<tr><td class="l">Bonus engagement 1 an</td><td class="seteur"><input type="number" step="0.1" data-seteng="1" value="${CFG.eng[1]*100}"> %</td></tr>`;
+  s+=`<tr><td class="l">Bonus engagement 2 ans</td><td class="seteur"><input type="number" step="0.1" data-seteng="2" value="${CFG.eng[2]*100}"> %</td></tr>`;
+  s+=`<tr><td class="l">Bonus engagement 3 ans</td><td class="seteur"><input type="number" step="0.1" data-seteng="3" value="${CFG.eng[3]*100}"> %</td></tr>`;
+  s+=`<tr><td class="l">Bonus Sign (base)</td><td class="seteur"><input type="number" step="0.1" data-setmisc="signBase" value="${CFG.signBase*100}"> %</td></tr>`;
+  s+=`<tr><td class="l">Bonus Sign combiné (≥ seuil)</td><td class="seteur"><input type="number" step="0.1" data-setmisc="signCombo" value="${CFG.signCombo*100}"> %</td></tr>`;
+  s+=`<tr><td class="l">Plafond de remise</td><td class="seteur"><input type="number" step="0.1" data-setmisc="cap" value="${CFG.cap*100}"> %</td></tr>`;
+  s+=`<tr><td class="l">Seuil bonus AOS+Sign</td><td class="seteur"><input type="number" data-setmisc="seuil" value="${CFG.seuil}"> €</td></tr></tbody>`;
+  document.getElementById('setMisc').innerHTML=s;
+}
+
+/* ============ RECALCUL & AFFICHAGE ============ */
+function refresh(){
+  const r = computeQuote(STATE, CFG);
+  CFG.aos.forEach((t,i)=>{ const c=document.querySelector(`[data-aossub="${i}"]`); if(c) c.textContent = eur.format(num(t.price)*num(STATE.aosQty[i])); });
+  document.getElementById('aosNb').textContent=r.nbTotal;
+  document.getElementById('aosTot').textContent=eur.format(r.aosTotal);
+  document.getElementById('signPU').innerHTML=money(r.signPrice||(CFG.sign[STATE.signIndex]?CFG.sign[STATE.signIndex].price:0));
+  document.getElementById('signTot').textContent=eur.format(r.signTotal);
+  document.getElementById('anaPU').innerHTML=money(CFG.analytics);
+  document.getElementById('anaTot').textContent=eur.format(r.anaTotal);
+  document.getElementById('consPU').innerHTML=money(CFG.consultation);
+  document.getElementById('consTot').textContent=eur.format(r.consTotal);
+  document.getElementById('engRetenu').value=r.engRetenu+(r.engRetenu>1?' ans':' an');
+  document.getElementById('rBrut').textContent=eur.format(r.brut);
+  document.getElementById('rAuto').textContent=pct(r.auto);
+  document.getElementById('rApp').textContent=pct(r.applied);
+  document.getElementById('rAnnuel').textContent=eur.format(r.annuel);
+  document.getElementById('rContrat').textContent=eur.format(r.contrat);
+  document.getElementById('manuel').parentElement.classList.toggle('manual-on', r.manual!=null);
+  // breakdown
+  const parts=[];
+  parts.push(`abonnement <b>${pct(r.base)}</b>`);
+  parts.push(`volume <b>${pct(r.volume)}</b>`);
+  parts.push(`engagement <b>${pct(r.engagement)}</b>`);
+  parts.push(`bonus Sign <b>${pct(r.signBonus)}</b>`);
+  let txt = 'Remise auto = '+parts.join(' + ');
+  if(r.autoRaw > r.auto) txt += ` → plafonnée à <b>${pct(r.auto)}</b>`;
+  if(r.manual!=null) txt += `<br>Remise manuelle forcée : <b>${pct(r.manual)}</b>.`;
+  document.getElementById('breakdown').innerHTML=txt;
+  save();
+}
+function num(v){ v=parseFloat(v); return isFinite(v)?v:0; }
+
+/* ============ ÉVÉNEMENTS ============ */
+document.addEventListener('input', e=>{
+  const t=e.target;
+  if(t.id==='abonnement') STATE.abonnement=t.value;
+  else if(t.id==='duree') STATE.duree=t.value;
+  else if(t.id==='client') STATE.client=t.value;
+  else if(t.id==='signVar') STATE.signIndex=parseInt(t.value);
+  else if(t.id==='signQty') STATE.signQty=t.value;
+  else if(t.id==='anaQty') STATE.anaQty=t.value;
+  else if(t.id==='consQty') STATE.consQty=t.value;
+  else if(t.id==='manuel') STATE.manuel=t.value;
+  else if(t.dataset.aos!=null) STATE.aosQty[+t.dataset.aos]=t.value;
+  // settings
+  else if(t.dataset.setaos!=null) CFG.aos[+t.dataset.setaos].price = t.value===''?null:num(t.value);
+  else if(t.dataset.setsign!=null) CFG.sign[+t.dataset.setsign].price = t.value===''?null:num(t.value);
+  else if(t.hasAttribute('data-setana')) CFG.analytics = t.value===''?null:num(t.value);
+  else if(t.hasAttribute('data-setcons')) CFG.consultation = t.value===''?null:num(t.value);
+  else if(t.dataset.setvolmin!=null) CFG.volume[+t.dataset.setvolmin].min = num(t.value);
+  else if(t.dataset.setvolb!=null) CFG.volume[+t.dataset.setvolb].bonus = num(t.value)/100;
+  else if(t.dataset.seteng!=null) CFG.eng[t.dataset.seteng] = num(t.value)/100;
+  else if(t.dataset.setmisc!=null){ const k=t.dataset.setmisc; CFG[k] = (k==='seuil')?num(t.value):num(t.value)/100; }
+  else return;
+  if(t.dataset.setaos!=null||t.dataset.setsign!=null) renderInputs();
+  refresh();
+});
+document.getElementById('resetInputs').onclick=()=>{
+  STATE={abonnement:'Non',duree:'1',client:'',aosQty:Array(CFG.aos.length).fill(''),signIndex:0,signQty:'',anaQty:'',consQty:'',manuel:''};
+  renderInputs(); refresh();
+};
+document.getElementById('resetAll').onclick=()=>{
+  if(confirm('Réinitialiser tous les prix et la grille de remise aux valeurs par défaut ?')){
+    CFG=JSON.parse(JSON.stringify(DEFAULT));
+    renderInputs(); renderSettings(); refresh();
+  }
+};
+
+/* init */
+renderInputs(); renderSettings(); refresh();
+</script>
+</body>
+</html>
