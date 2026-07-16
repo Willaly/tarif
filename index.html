@@ -179,9 +179,9 @@
 /* ============ CONFIG PAR DÉFAUT (= v2) ============ */
 const DEFAULT = {
   aos:[
-    {label:"< 150K", price:300},{label:"< 500K", price:680},{label:"< 2M", price:1100},
-    {label:"< 6M", price:1620},{label:"< 10M", price:2150},{label:"< 25M", price:3200},
-    {label:"< 50M", price:4250},{label:"< 100M", price:5300},{label:"> 100M", price:6350},
+    {label:"0K < 150K", price:300},{label:"150K < 500K", price:680},{label:"500K < 2M", price:1100},
+    {label:"2M < 6M", price:1620},{label:"6M < 10M", price:2150},{label:"10M < 25M", price:3200},
+    {label:"25M < 50M", price:4250},{label:"50M < 100M", price:5300},{label:"> 100M", price:6350},
     {label:"Forfait 1 projet (montant inconnu)", price:1850}
   ],
   sign:[{label:"Simple", price:840},{label:"Avec accompagnement", price:null},{label:"Avec paramétrage", price:null}],
@@ -237,6 +237,9 @@ function computeQuote(state, cfg){
 
 /* ============ ÉTAT & PERSISTANCE ============ */
 let CFG = load('aos_cfg', DEFAULT);
+// Les libellés de tranches/variantes ne sont pas éditables : toujours resynchroniser depuis DEFAULT
+if(Array.isArray(CFG.aos)) CFG.aos.forEach((t,i)=>{ if(DEFAULT.aos[i]) t.label=DEFAULT.aos[i].label; });
+if(Array.isArray(CFG.sign)) CFG.sign.forEach((t,i)=>{ if(DEFAULT.sign[i]) t.label=DEFAULT.sign[i].label; });
 let STATE = load('aos_state', {
   abonnement:'Non', duree:'1', client:'',
   aosQty:Array(DEFAULT.aos.length).fill(''),
